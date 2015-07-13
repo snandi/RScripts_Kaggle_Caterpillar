@@ -33,4 +33,20 @@ tube_by_component_type <- fn_merge_tube_comp_type(File1='tube.csv', File2='bill_
 
 train_tube_comptype <- merge(x=train_tube, y=tube_by_component_type, by='tube_assembly_id',
                              all.x=T, all.y=F)
-train_tube_comptype <- na.is.zero(train_tube_comptype)
+
+########################################################################
+## Diagnostics
+########################################################################
+Data <- train_tube_comptype
+Data$log_ai <- log(Data$cost + 1)
+
+qplot(log_ai, data=Data, geom="histogram", binwidth=0.2) +
+  ggtitle(label = expression(paste('Histogram of log', (a[i])))) +
+  xlab(label = expression(log(a[i])))
+
+lattice::xyplot(log_ai ~ quantity, data=Data)
+
+lattice::xyplot(log_ai ~ quantity | bracket_pricing, data=Data)
+
+lattice::xyplot(log_ai ~ quantity | bracket_pricing, data=subset(Data, quantity <=500))
+
