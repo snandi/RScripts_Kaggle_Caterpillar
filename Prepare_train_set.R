@@ -40,13 +40,86 @@ train_tube_comptype <- merge(x=train_tube, y=tube_by_component_type, by='tube_as
 Data <- train_tube_comptype
 Data$log_ai <- log(Data$cost + 1)
 
-qplot(log_ai, data=Data, geom="histogram", binwidth=0.2) +
+## Histogram of log of cost
+Plot1 <- qplot(log_ai, data=Data, geom="histogram", binwidth=0.2) +
   ggtitle(label = expression(paste('Histogram of log', (a[i])))) +
   xlab(label = expression(log(a[i])))
 
-lattice::xyplot(log_ai ~ quantity, data=Data)
+## xyplot of log_ai & quantity, to visualize the nonlinearity
+Plot2 <- qplot(x=log(quantity), y=log_ai, data=Data) +
+  geom_point(aes(color=bracket_pricing), data=Data)
 
-lattice::xyplot(log_ai ~ quantity | bracket_pricing, data=Data)
+## xyplot of log_ai & quantity, to visualize the nonlinearity
+Plot3 <- qplot(x=log(quantity), y=log_ai, data=Data) +
+  geom_point() +
+  facet_grid(.~bracket_pricing) +
+  ggtitle('By Bracket Pricing')
 
-lattice::xyplot(log_ai ~ quantity | bracket_pricing, data=subset(Data, quantity <=500))
+## Hist of log_ai by bracket_pricing
+Plot4 <- qplot(log_ai, data=Data) +
+  geom_histogram(aes(col=bracket_pricing), bandwidth=0.2) +
+  facet_grid(.~bracket_pricing) +
+  ggtitle('By Bracket Pricing')
+
+## How many tube_assembly_id
+length(unique(Data$tube_assembly_id))     ## 8855
+
+## xyplot of log_ai & diameter, to visualize the nonlinearity
+Plot5 <- qplot(x=diameter, y=log_ai, data=Data) +
+  geom_point() +
+  ggtitle('Cost vs diamter')
+
+## xyplot of log_ai & wall, to visualize the nonlinearity
+Plot6 <- qplot(x=wall, y=log_ai, data=Data) +
+  geom_point() +
+  ggtitle('Cost vs wall')
+
+## xyplot of log_ai & length, to visualize the nonlinearity
+Plot7 <- qplot(x=length, y=log_ai, data=Data) +
+  geom_point() +
+  ggtitle('Cost vs length')
+
+## xyplot of log_ai & num_bends, to visualize the nonlinearity
+Plot8 <- qplot(x=num_bends, y=log_ai, data=Data) +
+  geom_point() +
+  ggtitle('Cost vs Number of bends')
+
+## xyplot of log_ai & bend_radius, to visualize the nonlinearity
+Plot9 <- qplot(x=bend_radius, y=log_ai, data=subset(Data, bend_radius < 550)) +
+  geom_point() +
+  ggtitle('Cost vs bend radius')
+
+## xyplot of length & num_bends, to visualize the nonlinearity
+Data.tmp <- unique(Data[,c('num_bends','length')])
+Plot10 <- qplot(x=num_bends, y=length, data=Data.tmp) +
+  geom_point() +
+  ggtitle('Length vs Number of bends')
+rm(Data.tmp)
+
+## xyplot of log_ai & quantity, for each Tube assembly id
+Data.tmp <- subset(Data, tube_assembly_id %in% levels(Data$tube_assembly_id)[1:100] & quantity < 500)
+Plot11 <- qplot(x=quantity, y=log_ai, data=Data.tmp) +
+  geom_line(aes(group=tube_assembly_id))
+rm(Data.tmp)
+## Plot11 shows that the cost & quantity relationship becomes a straight line after 50
+
+NumTubes <- 500
+Data.tmp <- subset(Data, tube_assembly_id %in% levels(Data$tube_assembly_id)[1:NumTubes] & quantity < 100)
+Plot12a <- qplot(x=quantity, y=log_ai, data=Data.tmp) +
+  geom_line(aes(group=tube_assembly_id)) + 
+  ggtitle(paste('Cost vs quantity for', NumTubes, 'tube assemblies'))
+#Plot12a
+
+Plot12b <- qplot(x=quantity, y=log_ai, data=Data.tmp) +
+  geom_line(aes(color=tube_assembly_id)) + 
+  ggtitle(paste('Cost vs quantity for', NumTubes, 'tube assemblies'))
+#Plot12b
+
+Plot12c <- qplot(x=quantity, y=log_ai, data=Data.tmp) +
+  geom_point() + 
+  ggtitle(paste('Cost vs quantity for', NumTubes, 'tube assemblies'))
+#Plot12c
+rm(Data.tmp)
+## Plot12 confirms that the cost & quantity relationship between 1 and 50 needs to be modeled carefully
+
 
