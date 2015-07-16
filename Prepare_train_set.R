@@ -40,6 +40,8 @@ train_tube_comptype <- merge(x=train_tube, y=tube_by_component_type, by='tube_as
 Data <- train_tube_comptype
 Data$log_ai <- log(Data$cost + 1)
 
+Filename.pdf <- paste(RPlotPath, 'DiagnosticPlots_', Today, '.pdf', sep='')
+#pdf(file = Filename.pdf, onefile=T)
 ## Histogram of log of cost
 Plot1 <- qplot(log_ai, data=Data, geom="histogram", binwidth=0.2) +
   ggtitle(label = expression(paste('Histogram of log', (a[i])))) +
@@ -48,7 +50,6 @@ Plot1 <- qplot(log_ai, data=Data, geom="histogram", binwidth=0.2) +
 ## xyplot of log_ai & quantity, to visualize the nonlinearity
 Plot2 <- qplot(x=log(quantity), y=log_ai, data=Data) +
   geom_point(aes(color=bracket_pricing), data=Data)
-
 ## xyplot of log_ai & quantity, to visualize the nonlinearity
 Plot3 <- qplot(x=log(quantity), y=log_ai, data=Data) +
   geom_point() +
@@ -119,7 +120,36 @@ Plot12c <- qplot(x=quantity, y=log_ai, data=Data.tmp) +
   geom_point() + 
   ggtitle(paste('Cost vs quantity for', NumTubes, 'tube assemblies'))
 #Plot12c
+
+Data.tmp <- subset(Data, tube_assembly_id %in% levels(Data$tube_assembly_id)[1:NumTubes] & quantity < 400)
+Plot12d <- qplot(x=log(quantity), y=log_ai, data=Data.tmp) +
+  geom_line(aes(color=tube_assembly_id)) + 
+  ggtitle(paste('Log(Cost) vs log(quantity) for', NumTubes, 'tube assemblies'))
+
+Data.tmp <- subset(Data, tube_assembly_id %in% levels(Data$tube_assembly_id)[1:NumTubes] & 
+                     quantity < 400 & quantity > 1)
+Plot12e <- qplot(x=log(quantity), y=log_ai, data=Data.tmp) +
+  geom_line(aes(color=tube_assembly_id)) + 
+  ggtitle(paste('Log(Cost) vs log(quantity) for', NumTubes, 'tube assemblies'))
+
 rm(Data.tmp)
 ## Plot12 confirms that the cost & quantity relationship between 1 and 50 needs to be modeled carefully
+
+# Plot1
+# Plot2
+# Plot3
+# Plot4
+# Plot5
+# Plot6
+# Plot7
+# Plot8
+# Plot9
+# Plot10
+# Plot11
+# Plot12a
+# Plot12b
+# Plot12c
+# Plot12d
+# dev.off()
 
 
