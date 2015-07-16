@@ -128,3 +128,5 @@ fn_merge_tube_comp_type <- function(File1='tube.csv', File2='bill_of_materials.c
   tube_by_component_type <- na.is.zero(X=tube_by_component_type)
   return(tube_by_component_type)  
 }
+
+##################################################################
