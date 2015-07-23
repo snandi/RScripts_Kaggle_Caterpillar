@@ -3,7 +3,8 @@ rm(list=objects(all.names=TRUE))
 #dev.off()
 
 ########################################################################
-## This script reads in all the data, using the functions
+## This script merges the train_set data, with other relevant tables
+## and 
 ########################################################################
 
 ########################################################################
@@ -18,21 +19,7 @@ RDataPath <- '~/Stat/Stat_Competitions/Kaggle_Caterpillar_2015July/Data/'
 ########################################################################
 Today <- Sys.Date()
 
-#fn_loadAllData(RDataPath=RDataPath)
-fn_loadData(RDataPath=RDataPath, File='train_set.csv')
-fn_loadData(RDataPath=RDataPath, File='tube.csv')
-
-dim(train_set)
-train_set$train_id <- row(train_set)
-train_tube_common <- intersect(names(train_set), names(tube))
-train_tube <- merge(x=train_set, y=tube, by=train_tube_common, all.x=T) 
-dim(train_tube)
-head(train_tube)
-
-tube_by_component_type <- fn_merge_tube_comp_type(File1='tube.csv', File2='bill_of_materials.csv')
-
-train_tube_comptype <- merge(x=train_tube, y=tube_by_component_type, by='tube_assembly_id',
-                             all.x=T, all.y=F)
+source(paste(RScriptPath, 'Prepare_train_set.R', sep=''))
 
 ########################################################################
 ## Diagnostics
@@ -40,8 +27,6 @@ train_tube_comptype <- merge(x=train_tube, y=tube_by_component_type, by='tube_as
 Data <- train_tube_comptype
 Data$log_ai <- log(Data$cost + 1)
 
-Filename.pdf <- paste(RPlotPath, 'DiagnosticPlots_', Today, '.pdf', sep='')
-#pdf(file = Filename.pdf, onefile=T)
 ## Histogram of log of cost
 Plot1 <- qplot(log_ai, data=Data, geom="histogram", binwidth=0.2) +
   ggtitle(label = expression(paste('Histogram of log', (a[i])))) +
@@ -135,21 +120,23 @@ Plot12e <- qplot(x=log(quantity), y=log_ai, data=Data.tmp) +
 rm(Data.tmp)
 ## Plot12 confirms that the cost & quantity relationship between 1 and 50 needs to be modeled carefully
 
-# Plot1
-# Plot2
-# Plot3
-# Plot4
-# Plot5
-# Plot6
-# Plot7
-# Plot8
-# Plot9
-# Plot10
-# Plot11
-# Plot12a
-# Plot12b
-# Plot12c
-# Plot12d
-# dev.off()
+Filename.pdf <- paste(RPlotPath, 'DiagnosticPlots_', Today, '.pdf', sep='')
+pdf(file = Filename.pdf, onefile=T)
 
+Plot1
+Plot2
+Plot3
+Plot4
+Plot5
+Plot6
+Plot7
+Plot8
+Plot9
+Plot10
+Plot11
+Plot12a
+Plot12b
+Plot12c
+Plot12d
+dev.off()
 
