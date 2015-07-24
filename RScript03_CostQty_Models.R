@@ -18,53 +18,77 @@ RDataPath <- '~/Stat/Stat_Competitions/Kaggle_Caterpillar_2015July/Data/'
 ########################################################################
 Today <- Sys.Date()
 
-source(paste(RScriptPath, 'Prepare_train_set.R', sep=''))
+# TrainData <- fn_prepData_tubeComp(trainORtest='train_set')
+Data_CostQty_Mult_D1 <- fn_prepData_CostQty(trainORtest = 'train_set')
+str(Data_CostQty_Mult_D1)
 
-########################################################################
-## Discard tubes with only qty=1
-########################################################################
-Data_Split <- split(x=Data_CostQty, f=Data_CostQty$tube_assembly_id)
-
-fn_OneQty <- function(DF){
-  if(nrow(DF) == 1) {
-    if(DF$quantity == 1) Ans <- TRUE
-  } else Ans <- FALSE
-  #names(Ans) <- as.vector(DF$tube_assembly_id[1])
-  return(Ans)
-}
-Tubes.Drop <- do.call(what=c, lapply(X=Data_Split, FUN=fn_OneQty))
-
-
+Data_MinQty <- fn_prepData_MinQty(trainORtest = 'train_set')
 ########################################################################
 ## Plot first diff of log(cost) & quantity
 ########################################################################
-head(Data_CostQty_D1)
+head(Data_CostQty_Mult_D1)
+Data <- Data_CostQty_Mult_D1
 NumTubes <- 500
-Data.tmp <- subset(Data_CostQty_D1, tube_assembly_id %in% levels(Data$tube_assembly_id)[1:NumTubes] & 
+
+Data.tmp <- subset(Data, tube_assembly_id %in% levels(Data$tube_assembly_id)[1:NumTubes] & 
                      quantity < 400 & quantity > 1)
 
 Filename.pdf <- paste(RPlotPath, 'CostQtyPlots_', Today, '.pdf', sep='')
 #pdf(file = Filename.pdf, onefile=T)
+NumTubes <- length(unique(as.vector(Data$tube_assembly_id)))
 
-Plot1 <- qplot(x=log(quantity), y=log_ai, data=Data_CostQty_D1) +
+Plot1 <- qplot(x=log(quantity), y=log_ai, data=Data) +
   geom_line(aes(color=tube_assembly_id)) + 
   ggtitle(paste('Log(Cost) vs log(quantity) for', NumTubes, 'tube assemblies'))
 
 #Plot1
 
-Plot2 <- qplot(x=log(quantity), y=log_ai_d1, data=Data_CostQty_D1) +
+Plot2 <- qplot(x=log(quantity), y=log_ai_d1, data=Data) +
   geom_line(aes(color=tube_assembly_id)) + 
   ggtitle(paste('Diff of Log(Cost) vs log(quantity) for', NumTubes, 'tube assemblies'))
 
 #Plot2
 
-Plot3 <- qplot(x=log(quantity), y=log_ai, data=Data_CostQty_D1) +
+Plot3 <- qplot(x=log_qty, y=log_ai, data=Data) +
   ggtitle(paste('Log(Cost) vs log(quantity) for', NumTubes, 'tube assemblies'))
-Plot3
+#Plot3
 
 dev.off()
 
 ########################################################################
 ## Model the cost & quantity
 ########################################################################
-Model1 <- lm()
+head(Data_CostQty_Mult_D1)
+Data <- Data_CostQty_Mult_D1
+Data$log_qty <- log(Data$quantity)
+
+Model1 <- lm(log_ai ~ quantity, data=Data)
+summary(Model1)
+
+Model2 <- lm(log_ai ~ log_qty, data=Data)
+summary(Model2)
+
+Model3 <- lm(log_ai ~ log_qty + I((log_qty)^2), data=Data)
+summary(Model3)
+anova(Model2, Model3)
+
+Model4 <- lm(log_ai ~ log_qty + I((log_qty)^2) + I((log_qty)^3), 
+             data=Data)
+summary(Model4)
+anova(Model3, Model4)
+
+Model5 <- lm(log_ai ~ log_qty + I((log_qty)^2) + I((log_qty)^3) + 
+               I((log_qty)^4), data=Data)
+summary(Model5)
+anova(Model4, Model5)
+
+Model4b <- lm(Data$log_ai ~ poly(x=log(Data$quantity), degree=3, raw=F))
+summary(Model4b)
+
+Model4.lo <- loess(log_ai ~ log_qty, data=Data, model=TRUE, degree=2)
+summary(Model4.lo)
+DD <- predict(Model4.lo, Data$log_qty, se=T)
+
+Plot4 <- Plot3 +
+ geom_line(aes(x=Data$log_qty, y=predict(Model4.lo, Data$log_qty, se.fit=T)), color='red')
+
