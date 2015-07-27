@@ -19,7 +19,7 @@ RDataPath <- '~/Stat/Stat_Competitions/Kaggle_Caterpillar_2015July/Data/'
 ########################################################################
 Today <- Sys.Date()
 
-source(paste(RScriptPath, 'Prepare_train_set.R', sep=''))
+source(paste(RScriptPath, 'RScript01_Prepare_trainset.R', sep=''))
 
 ########################################################################
 ## Diagnostics

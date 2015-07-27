@@ -94,3 +94,4 @@ fn_returnMinQty <- function(DF){
 }
 Data_MinQty <- do.call(what=rbind, lapply(X=Data_Split, FUN=fn_returnMinQty))
 
+
