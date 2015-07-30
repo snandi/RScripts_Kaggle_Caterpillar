@@ -21,8 +21,6 @@ Today <- Sys.Date()
 
 
 
-
-
 ########################################################################
 ## Prepare data for qty = 1 only
 ########################################################################
@@ -35,6 +33,7 @@ fn_returnMinQty <- function(DF){
   return(DF[1,])
 }
 Data_MinQty <- do.call(what=rbind, lapply(X=Data_Split, FUN=fn_returnMinQty))
+
 
 # Have quite figured out how to fit yet
 ## issues:
@@ -60,14 +59,13 @@ Data_MinQty<- Data_MinQty[,-which(names(Data_MinQty)=="train_id")]
 Data_MinQty<- Data_MinQty[,-which(names(Data_MinQty)=="tube_assembly_id")]
 ncol(Data_MinQty)
 
-## missing values 
+## missing values /# all from component_type variales + material_id, 10% missing
 missing <- integer(ncol(Data_MinQty))
 for ( i  in 1:ncol(Data_MinQty)){
   missing[i] <- sum(is.na(Data_MinQty[,i]))
 }
 plot (missing)
 names(Data_MinQty)[which(missing > 50)]
-# all from component_type variales
 
 
 
@@ -86,6 +84,17 @@ nlevels(Data_MinQty$end_x)
 ### predcition by combining thethe two parts togehter basis price and decline over quantity
 ### Need to creat corresponding Data_CostQty_Mult_D1//Data_MinQty for the test set, 
 ################################################################################################################################
+# test_set <- test_set[,-9]
+# cost <- integer(nrow(test_set))
+# test_set <- cbind(test_set,cost)
+#  write.csv(test_set,paste(RDataPath,"test_set.csv",sep=""),row.names=F)
+
+
+TestData <- fn_prepData_tubeComp(trainORtest='test_set')
+
+Data_MinQty_Train <- fn_prepData_MinQty(trainORtest = 'train_set')
+Data_MinQty_Test <- fn_prepData_MinQty(trainORtest = 'test_set')
+
 BasePrice <- predict (lm1,  Data_MinQty.te)
 deltaPrice <- predict (lm1,  Data_CostQty.te)
 PredPrice <- BasePrcie + PredPrice

@@ -136,7 +136,7 @@ fn_merge_tube_comp_type <- function(File1 = 'tube.csv', File2 = 'bill_of_materia
 ## component types. Use this function in subsequent data preparation
 ## functions
 ########################################################################
-fn_prepData_tubeComp <- function(trainORtest = 'train_set'){
+fn_prepData_tubeComp <- function(trainORtest = 'test_set'){
   
   if(substr(x = trainORtest, start = (nchar(trainORtest) - 4), stop = nchar(trainORtest)) != '.csv'){
     trainORtest <- paste(trainORtest, '.csv', sep = '')
