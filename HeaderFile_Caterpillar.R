@@ -8,7 +8,8 @@ Packages <- c(
   'lattice',
   'plyr',
   'reshape',
-  'reshape2'
+  'reshape2',
+  'randomForest'
 )
 
 ## For loop for requiring packages and installing them if something doesnt exist

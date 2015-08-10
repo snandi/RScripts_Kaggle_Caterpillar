@@ -221,3 +221,15 @@ fn_prepData_MinQty <- function(trainORtest = 'train_set'){
   Data_MinQty <- do.call(what=rbind, lapply(X=Data_Split, FUN=fn_returnMinQty))
   return(Data_MinQty)  
 }
+
+fn_prepData_DiffQty <- function(trainORtest = 'train_set'){
+  TrainData <- fn_prepData_tubeComp(trainORtest = trainORtest)
+  Data_Split <- split(x=TrainData, f=TrainData$tube_assembly_id)
+  
+  fn_returnMinQty <- function(DF){
+    DF <- DF[order(DF$quantity),]
+    return(DF[1,])
+  }
+  Data_MinQty <- do.call(what=rbind, lapply(X=Data_Split, FUN=fn_returnMinQty))
+  return(Data_MinQty)  
+}
