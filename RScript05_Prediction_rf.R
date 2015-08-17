@@ -41,7 +41,13 @@ fit1.rf <- randomForest(log_ai~.,  data=TrainData, mtry=10, ntree=10, importance
 #You can set na.action=na.roughfix which fills NAs with the mean or mode of the missing variable. 
 # Other option is to impute missing values using rfImpute, then run randomForest on the complete data set
 
+
+# issue1 :object 'CP-001' not found
+names(TrainData) <- gsub(pattern="-", replacement= "_",x=names(TrainData))
+###!!! Can not handle categorical predictors with more than 53 categories
+
 fit1.rf <- randomForest(log_ai~.,  data=TrainData, mtry=10, ntree=10, importance=TRUE,na.action=na.roughfix )
+
 str(TrainData)
 
 TestData <-  fn_prepData_tubeComp(trainORtest = 'test_set')

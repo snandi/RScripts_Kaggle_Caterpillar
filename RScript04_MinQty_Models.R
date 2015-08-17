@@ -76,22 +76,23 @@ TestData_MinQty$quote_date <- as.Date(TestData_MinQty$quote_date)
 
 basePrice_te <- predict(lm_MinQty,TestData_MinQty)
 
-# Error in model.frame.default(Terms, newdata, na.action = na.action, xlev = object$xlevels) : 
-#   factor supplier has new levels S-0028, S-0033, S-0036, S-0039, S-0040, S-0043, S-0051, S-0061, 
-#                                   S-0069, S-0073, S-0076, S-0077, S-0078, S-0080, S-0088, S-0091
-## setting the new supplier as NA 
 
-id <- which(!(TestData_MinQty$supplier %in% levels(TrainData_MinQty$supplier)))
-TestData_MinQty$supplier[id] <- NA
-basePrice_te <- predict(lm_MinQty,TestData_MinQty)
-
-# Have quite figured out how to fit yet
-## issues:
-#  1, We want to get a data set with price corresponding to quantity =1, but some tube_assembly_id/ instance has prices from a higher quantity.
-#  2, some factor variables have a lot of levels:  supplier: Factor w/ 57 levels , end_a, end_x have round 30 levesls. Difficult to intepret.
-#  3, Missing issues, it seems that There are 10% missing for component type. 1 % missing for material_id.
+############################################### Prediction ##################################################################
+# there are new levels for factor variables in test set 
+####                          ISSUES : !!!!!!
+## 1, some new suppliers
+## 2, in regression model, some suppliers are revoved due to missing data, which makes it difficult to predict the value for TestData
+     # 1016/8856 deleted
+## 3. end_a has some new factors --  EF-006, EF-011, EF-013, 
+## 4, end_x
+#
+# solving methods, 1, do some imputation, 2, using average to predict the new supplier
 
 
+
+
+
+## for each variables
 missing <- integer(ncol(TrainData_MinQty))
 for ( i  in 1:ncol(TrainData_MinQty)){
   missing[i] <- sum(is.na(TrainData_MinQty[,i]))
@@ -99,34 +100,56 @@ for ( i  in 1:ncol(TrainData_MinQty)){
 plot (missing)
 names(TrainData_MinQty)[which(missing > 50)]
 
-#####!!!!! because of missingness, many observations are removed from the linear model, 
-#          and for those new suppliers, we have to predict with mean value.
-###        Think about the imputation.
+## for each observation
+rowMissing <- integer(nrow(TrainData_MinQty))
+for ( i  in 1:nrow(TrainData_MinQty)){
+  rowMissing[i] <- any(is.na(TrainData_MinQty[i,]))
+}
+summary(as.factor(rowMissing))
+
+TrainData_MinQty_inModel <- TrainData_MinQty[(1-rowMissing)*(1:nrow(TrainData_MinQty)),]
+
+TestData_MinQty_nonMissing <- subset(TestData_MinQty,supplier%in%TrainData_MinQty_inModel$supplier
+                                       &end_a %in% TrainData_MinQty_inModel$end_a
+                                       & end_x %in% TrainData_MinQty_inModel$end_x)
+TestData_MinQty_nonMissing$supplier <- droplevels(TestData_MinQty_MissingSuppliers$supplier)
+TestData_MinQty_Missing <- subset(TestData_MinQty,!(supplier%in%TrainData_MinQty_inModel$supplier
+                                       &end_a %in% TrainData_MinQty_inModel$end_a
+                                       & end_x %in% TrainData_MinQty_inModel$end_x ))
+TestData_MinQty_Missing$supplier <- droplevels(TestData_MinQty_Missing$supplier)
+
+idx_Missing <- which (!(TestData_MinQty$ supplier%in%TrainData_MinQty_inModel$supplier
+                        & TestData_MinQty$end_a %in% TrainData_MinQty_inModel$end_a
+                        & TestData_MinQty$end_x %in% TrainData_MinQty_inModel$end_x ) )
+odx_nonMissing <- which ((TestData_MinQty$ supplier%in%TrainData_MinQty_inModel$supplier
+                           & TestData_MinQty$end_a %in% TrainData_MinQty_inModel$end_a
+                           & TestData_MinQty$end_x %in% TrainData_MinQty_inModel$end_x ) )
+
+pred_oldSuppliers <- predict(lm_MinQty,TestData_MinQty_oldSuppliers)
 
 
-
-
-
-##processing on Data_MInQty, #remove Data_MinQty$train_id, tube_assembly_id
-str(Data_MinQty$quote_date <- as.Date(Data_MinQty$quote_date))
-Data_MinQty<- Data_MinQty[,-which(names(Data_MinQty)=="train_id")]
-Data_MinQty<- Data_MinQty[,-which(names(Data_MinQty)=="tube_assembly_id")]
-ncol(Data_MinQty)
-
+suppliers <- unique( droplevels(TrainData_MinQty_inModel$supplier))
+#using average of existing Suppliers
+pred_Missing <- NULL
+for ( i in 1:nrow(TestData_MinQty_Missing)){
+  obs <- NULL
+  for( j in 1:length(suppliers))
+    obs <-rbind(obs,cbind(suppliers[j], TestData_MinQty[idx_Missing[i],2:ncol(TestData_MinQty)]))
+  names(obs)[1]<-"supplier"
+  values  <- mean(predict(lm_MinQty, obs))
+  pred_Missing[i]<-mean(values)  
+}
+  
+  
+TestData_MinQty$supplier[id] <- NA
+basePrice_te <- predict(lm_MinQty,TestData_MinQty)
 
 
 ############################################################################################################################
-### predcition by combining thethe two parts togehter basis price and decline over quantity
-### Need to creat corresponding Data_CostQty_Mult_D1//Data_MinQty for the test set, 
+### scheme / big picture
 ################################################################################################################################
 #Construct a data set consists of quantity =1 and price, We will construct a model on this data set to predict the price for different product 
 # at quantity =1;
-
-
-TestData <- fn_prepData_tubeComp(trainORtest='test_set')
-
-Data_MinQty_Train <- fn_prepData_MinQty(trainORtest = 'train_set')
-Data_MinQty_Test <- fn_prepData_MinQty(trainORtest = 'test_set')
 
 BasePrice <- predict (lm1,  Data_MinQty.te)
 deltaPrice <- predict (lm1,  Data_CostQty.te)
