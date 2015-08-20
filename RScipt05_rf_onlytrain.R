@@ -16,7 +16,6 @@ source(Filename.Header)
 source(paste(RScriptPath, 'fn_Library_Caterpillar.R', sep=''))
 RPlotPath <- '~/Stat/Stat_Competitions/Kaggle_Caterpillar_2015July/Plots/'
 RDataPath <- '~/Stat/Stat_Competitions/Kaggle_Caterpillar_2015July/Data/'
-
 ########################################################################
 Today <- Sys.Date()
 
@@ -34,7 +33,7 @@ options(scipen = 10)
 test = test_set
 train = train_set
 
-train$id = - (1:nrow(train))
+train$id = -(1:nrow(train))
 test$cost = 0
 
 train = rbind(train, test)
@@ -43,8 +42,8 @@ train = rbind(train, test)
 continueLoop = TRUE
 while(continueLoop){
   continueLoop = FALSE
-  for(f in dir(RDataPath)){
-    d = read.csv(paste0(RDataPath, f))
+  for(f in dir("../input/")){
+    d = read.csv(paste0("../input/", f))
     commonVariables = intersect(names(train), names(d))
     if(length(commonVariables) == 1){
       train = merge(train, d, by = commonVariables, all.x = TRUE)
@@ -53,11 +52,6 @@ while(continueLoop){
     }
   }
 }
-#compents.csv something wierd, deleted one row
-
-#   f =  dir(RDataPath)[i]
-#   d =read.csv(paste0(RDataPath,f))
-#   i=i+1
 
 ### Clean NA values
 for(i in 1:ncol(train)){
@@ -69,7 +63,6 @@ for(i in 1:ncol(train)){
     train[,i] = as.factor(train[,i])
   }
 }
-
 
 ### Clean variables with too many categories
 for(i in 1:ncol(train)){
