@@ -44,7 +44,10 @@ continueLoop = TRUE
 while(continueLoop){
   continueLoop = FALSE
   for(f in dir(RDataPath)){
-    d = read.csv(paste0(RDataPath, f))
+    print(f)
+    filename <- paste0(RDataPath, f)
+    if(substrRight(filename, 3) != 'csv') next      ## Because the folder contains file_descriptions
+    d = read.csv(filename)
     commonVariables = intersect(names(train), names(d))
     if(length(commonVariables) == 1){
       train = merge(train, d, by = commonVariables, all.x = TRUE)
@@ -88,9 +91,6 @@ train = train[which(train$id < 0),]
 ###
 ### Evaluate RF predictions by splitting the train db in 80%/20%
 ###
-
-### Randomforest
-library(randomForest)
 
 # dtrain_cv = train[which(train$id %% 5 > 0),]
 # dtest_cv = train[which(train$id %% 5 == 0),]

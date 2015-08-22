@@ -35,7 +35,14 @@ is.integer0 <- function(x)
   is.integer(x) && !length(x)
 }
 
-## Function library for Curve registration
+
+########################################################################
+## substr the last n characters of a character vector
+########################################################################
+substrRight <- function(x, n){
+  substr(x, nchar(x)-n+1, nchar(x))
+}
+########################################################################
 
 fn_get_pValue <- function (lmobject) {
   if (class(lmobject) != "lm") stop("Not an object of class 'lm' ")
