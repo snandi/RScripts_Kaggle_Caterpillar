@@ -5,6 +5,7 @@ Packages <- c(
   'boot',
   'car',
   'ggplot2',
+  'gridExtra',
   'lattice',
   'plyr',
   'reshape',
