@@ -241,3 +241,48 @@ fn_prepData_DiffQty <- function(trainORtest = 'train_set'){
   return(Data_MinQty)  
 }
 ########################################################################
+
+########################################################################
+## This function returns a matrix of p-values of pairwise difference  
+## after a Tukey test has been performed on the anova                 
+########################################################################
+fn_return_pValueTukeyMatrix <- function(TukeyObj, factorName, ReturnObj='pValues'){
+  TukeyObj.DF <- as.data.frame(TukeyObj[[factorName]])
+  
+  rownames(TukeyObj.DF) <- gsub(pattern = 'S-', replacement = 'S', x = rownames(TukeyObj.DF))
+  TukeyObj.DF$Frag1 <- sapply(X=rownames(TukeyObj.DF), FUN=function(rowname){
+    unlist(strsplit(rowname, split='-'))[1]})
+  TukeyObj.DF$Frag2 <- sapply(X=rownames(TukeyObj.DF), FUN=function(rowname){
+    unlist(strsplit(rowname, split='-'))[2]})
+  TukeyObj.DF <- within(data=TukeyObj.DF, {
+    Frag1 <- as.factor(Frag1)
+    Frag2 <- as.factor(Frag2)
+  })
+  
+  TukeyObj.pValues <- reshape(TukeyObj.DF[,c('Frag1', 'Frag2', 'p adj')],
+                              timevar='Frag2',
+                              idvar='Frag1',
+                              direction='wide')
+  rownames(TukeyObj.pValues) <- TukeyObj.pValues$Frag1
+  TukeyObj.pValues$Frag1 <- NULL
+  colnames(TukeyObj.pValues) <- gsub(pattern='p adj.', replacement='', x=colnames(TukeyObj.pValues))
+  TukeyObj.pValues <- round(TukeyObj.pValues, 4)
+  
+  TukeyObj.diff <- reshape(TukeyObj.DF[,c('Frag1', 'Frag2', 'diff')],
+                           timevar='Frag2',
+                           idvar='Frag1',
+                           direction='wide')
+  rownames(TukeyObj.diff) <- TukeyObj.diff$Frag1
+  TukeyObj.diff$Frag1 <- NULL
+  colnames(TukeyObj.diff) <- gsub(pattern='diff.', replacement='', x=colnames(TukeyObj.diff))
+  
+  if(ReturnObj=='pValues'){
+    return(data.matrix(TukeyObj.pValues))
+  } else if(ReturnObj=='diff'){
+    return(data.matrix(TukeyObj.diff))
+  } else{
+    return(TukeyObj.DF)
+  }
+}
+########################################################################
+
