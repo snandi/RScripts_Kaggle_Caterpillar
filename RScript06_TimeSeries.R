@@ -32,7 +32,7 @@ Plot1 <- qplot(x = quote_date, y = log_ai_qty1, data = TSData) + geom_point()
 
 TSData.xts <- as.xts(x = TSData$log_ai_qty1, order.by = TSData$quote_date)
 
-MonthlyMedians <- apply.monthly(x = TSData.xts, FUN = median, )
+MonthlyMedians <- apply.monthly(x = TSData.xts, FUN = median)
 MonthlyMeans <- apply.monthly(x = TSData.xts, FUN = mean)
 MonthlyMin <- apply.monthly(x = TSData.xts, FUN = min)
 MonthlyMax <- apply.monthly(x = TSData.xts, FUN = max)
@@ -119,8 +119,6 @@ QtrlyData.df$Qtr <- format(as.yearqtr(QtrlyData.df$Date), '%q')
 
 TSData$Year <- format(as.yearqtr(TSData$quote_date), '%Y')
 TSData$Qtr <- format(as.yearqtr(TSData$quote_date), '%q')
-
-
 
 Molel_Yr <- lm(log_ai_qty1 ~ as.factor(Year), data = subset(TSData, Year >= 2010))
 summary(Molel_Yr)

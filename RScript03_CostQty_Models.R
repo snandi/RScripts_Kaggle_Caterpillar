@@ -23,6 +23,7 @@ Data_CostQty_Mult_D1 <- fn_prepData_CostQty(trainORtest = 'train_set')
 str(Data_CostQty_Mult_D1)
 
 Data_MinQty <- fn_prepData_MinQty(trainORtest = 'train_set')
+str(Data_MinQty)
 ########################################################################
 ## Plot first diff of log(cost) & quantity
 ########################################################################
