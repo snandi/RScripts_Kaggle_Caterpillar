@@ -152,7 +152,9 @@ fn_prepData_tubeComp <- function(trainORtest = 'test_set'){
   TT <- fn_loadData(RDataPath = RDataPath, File = trainORtest, Return = T)
   tube <- fn_loadData(RDataPath = RDataPath, File = 'tube.csv', Return = T)
   
-  TT$train_id <- row(TT)
+  if(trainORtest == 'train_set.csv') {
+    TT$train_id <- row(TT)[,1]
+  }
   TT_tube_common <- intersect(names(TT), names(tube))
   TT_tube <- merge(x = TT, y = tube, by = TT_tube_common, all.x = T) 
   
@@ -160,7 +162,10 @@ fn_prepData_tubeComp <- function(trainORtest = 'test_set'){
   
   TT_tube_comptype <- merge(x = TT_tube, y = tube_by_component_type, by = 'tube_assembly_id',
                                all.x = T, all.y = F)
-  TT_tube_comptype$log_ai <- log(TT_tube_comptype$cost + 1)  
+  if(trainORtest == 'train_set.csv') {
+    TT_tube_comptype$log_ai <- log(TT_tube_comptype$cost + 1)  
+  }
+  
   return(TT_tube_comptype)  
 }
 ########################################################################
@@ -226,6 +231,17 @@ fn_prepData_MinQty <- function(trainORtest = 'train_set'){
     return(DF[1,])
   }
   Data_MinQty <- do.call(what=rbind, lapply(X=Data_Split, FUN=fn_returnMinQty))
+  
+  for(Col in names(Data_MinQty)){
+    if(is.numeric(Data_MinQty[,Col])){
+      Data_MinQty[,Col] <- na.is.zero(Data_MinQty[,Col])
+    } 
+  }
+  Data_MinQty$material_id <- as.vector(Data_MinQty$material_id)
+  Data_MinQty$material_id[is.na(Data_MinQty$material_id)] <- 'NA'
+  Data_MinQty$material_id <- as.factor(Data_MinQty$material_id)
+  colnames(Data_MinQty) <- gsub(pattern='-', replacement='', x=colnames(Data_MinQty))
+  
   return(Data_MinQty)  
 }
 
