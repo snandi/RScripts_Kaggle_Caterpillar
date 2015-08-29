@@ -33,8 +33,6 @@ train <- train_set
 train$id <- - (1:nrow(train))
 test$cost <- 0
 
-train_test <- rbind(train, test)
-
 length(unique(train$tube_assembly_id))
 length(unique(test$tube_assembly_id))
 
@@ -74,34 +72,71 @@ fn_prepData_forRF <- function(Data){
     Data$NewCol <- as.factor(Data$supplier == Supp)
     names(Data)[names(Data) == 'NewCol'] <- paste0('Supplier_', Supp)
   }
-  str(Data)
+  # str(Data)
   
   Colnames.Keep <- colnames(Data) %w/o% c('tube_assembly_id', 'supplier', 'quote_date', 'cost', 'train_id', 'log_ai', 
                                                  'Year', 'Qtr', 'quantity')
   Data_forRF <- Data[, Colnames.Keep]
   colnames(Data_forRF) <- gsub(pattern='-', replacement='', x=colnames(Data_forRF))
+  
+  for(Col in colnames(Data_forRF)){
+    if(is.numeric(Data_forRF[,Col])){
+      Data_forRF[,Col] <- na.is.zero(Data_forRF[,Col])
+    }
+  }
+
+  Data_forRF$material_id <- as.vector(Data_forRF$material_id)
+  Data_forRF[is.na(Data_forRF[,'material_id']),'material_id'] <- 'None'
+  Data_forRF$material_id[Data_forRF$material_id == 'NA'] <- 'None'
+  Data_forRF$material_id <- as.factor(Data_forRF$material_id)
+
+  Data_forRF$end_x <- NULL
   return(Data_forRF) 
 }
 
 Data_forRF_Train <- fn_prepData_forRF(Data=Data_MinQty)
+Data_forRF_Train$id <- -(1:nrow(Data_forRF_Train))
 Data_forRF_Test <- fn_prepData_forRF(Data=Data_MinQty_test)
+Data_forRF_Test$log_ai_qty1 <- 0
 
+Data_forRF_TestTrain<- rbind(Data_forRF_Train, Data_forRF_Test)
+for(col in colnames(Data_forRF_TestTrain)){
+  if(is.factor(Data_forRF_TestTrain[,col])){
+    print(col)
+    Data_forRF_TestTrain[,col] <- as.factor(as.vector(Data_forRF_TestTrain[,col]))
+  }
+}
+
+Data_forRF_Train <- subset(Data_forRF_TestTrain, id < 0)
+rownames(Data_forRF_Train) <- -Data_forRF_Train$id
+
+Data_forRF_Test <- subset(Data_forRF_TestTrain, id > 0)
+rownames(Data_forRF_Test) <- Data_forRF_Test$id
 ########################################################################
 ## Linear Model
 ########################################################################
-Model1 <- lm(log_ai_qty1 ~ ., data = Data_forRF_Train)
+column_id <- which(colnames(Data_forRF_Train) == 'id')
+Model1 <- lm(log_ai_qty1 ~ ., data = Data_forRF_Train[,-column_id])
 summary(Model1)
 # plot(Model1)
+
+column_id <- which(colnames(Data_forRF_Test) %in% c('id', 'log_ai_qty1'))
+Prediction <- as.data.frame(cbind(id = Data_forRF_Test$id,
+                                      Model1=predict(Model1, Data_forRF_Test[,-column_id])))
+rownames(Prediction) <- NULL
+summary(Prediction)
 
 ########################################################################
 ## Random Forest
 ########################################################################
-Col_Response <- which(colnames(Data_forRF_Train) == 'log_ai_qty1')
+column_id <- which(colnames(Data_forRF_Train) %in% c('id', 'log_ai_qty1'))
 
-RF1 <- randomForest(formula = Data_forRF_Train$log_ai_qty1 ~ ., data = Data_forRF_Train[,-48], 
+RF1 <- randomForest(formula = Data_forRF_Train$log_ai_qty1 ~ ., data = Data_forRF_Train[,-column_id], 
                     ntree = 20, do.trace = 2, importance = TRUE)
 round(importance(RF1))
-predict(RF1, Data_forRF_Test)
 
-## 1. Need to fix different factor levels in train and test
-## Extend the cost by quantity
+column_id <- which(colnames(Data_forRF_Test) %in% c('id', 'log_ai_qty1'))
+
+Prediction$RF1 <- predict(RF1, Data_forRF_Test[-column_id])
+
+
