@@ -132,11 +132,34 @@ summary(Prediction)
 column_id <- which(colnames(Data_forRF_Train) %in% c('id', 'log_ai_qty1'))
 
 RF1 <- randomForest(formula = Data_forRF_Train$log_ai_qty1 ~ ., data = Data_forRF_Train[,-column_id], 
-                    ntree = 20, do.trace = 2, importance = TRUE)
+                    ntree = 100, do.trace = 2, importance = TRUE)
 round(importance(RF1))
 
 column_id <- which(colnames(Data_forRF_Test) %in% c('id', 'log_ai_qty1'))
 
 Prediction$RF1 <- predict(RF1, Data_forRF_Test[-column_id])
 
+########################################################################
+## Estimate the costs of different quantities
+########################################################################
+submitted <- read.csv('submit.csv', header=T)
+
+test.pred <- merge(x = Prediction, y = test, all.y = T)
+test.pred_split <- split(x = test.pred, f = as.factor(test.pred$tube_assembly_id))
+
+test.pred <- do.call(what=rbind, lapply(X=test.pred_split, FUN=fn_predictCostFromQty))
+test.pred <- merge(x=test.pred, y=submitted, by='id')
+test.pred$cost_Model1[test.pred$cost_Model1 < 1.5] <- test.pred$cost.y[test.pred$cost_Model1 < 1.5]
+
+submitFile <- test.pred[,c('id', 'cost_RF1')]
+submitFile <- test.pred[,c('id', 'cost_Model1')]
+
+colnames(submitFile) <- c('id', 'cost')
+summary(submitFile)
+write.csv(submitFile, 'submitFile_lm.csv', row.names = FALSE, quote = FALSE)
+
+# qplot() + geom_point(aes(x = log(cost.y), y = log(cost_RF1)), data = test.pred)
+# qplot() + geom_point(aes(x = log(cost.y), y = log(cost_Model1)), data = test.pred)
+# 
+# summary(test.pred)
 

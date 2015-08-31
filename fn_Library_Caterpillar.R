@@ -302,3 +302,28 @@ fn_return_pValueTukeyMatrix <- function(TukeyObj, factorName, ReturnObj='pValues
 }
 ########################################################################
 
+########################################################################
+## Use the cost predicted for quantity 1 to estimate the costs for 
+## different quantities
+########################################################################
+fn_predictCostFromQty <- function(Data){
+  ### (Intercept)     log_qty       I((log_qty)^2) 
+  ### 3.18632061      -0.60453927   0.05378612 
+  Beta0 <- 3.18632061
+  Beta1 <- -0.60453927
+  Beta2 <- 0.05378612
+  Cost_Qty1 <- subset(Data, !is.na(RF1))[,'RF1']
+  Cost_Qty1_Model1 <- subset(Data, !is.na(Model1))[,'Model1']
+  
+  Data$qty_max4 <- sapply(X=Data[,'quantity'], FUN=function(q){min(q, exp(4))})
+  Data$cost_RF1 <- exp(Cost_Qty1 + Beta1 * log(Data$qty_max4) + Beta2 * (log(Data$qty_max4))^2) - 1
+  Data$cost_RF1[Data$cost_RF1 < 0] <- 0.1
+ 
+  Data$cost_actualqty <- exp(Cost_Qty1 + Beta1 * log(Data$quantity) + Beta2 * (log(Data$quantity))^2) - 1
+  Data$cost_actualqty[Data$cost_actualqty < 0] <- 0.1
+
+  Data$cost_Model1 <- exp(Cost_Qty1_Model1 + Beta1 * log(Data$qty_max4) + Beta2 * (log(Data$qty_max4))^2) - 1
+  Data$cost_Model1[Data$cost_Model1 < 0] <- 0.1
+  return(Data)
+}
+########################################################################
